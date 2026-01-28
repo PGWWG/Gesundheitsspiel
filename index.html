@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gesundheitspolitik Simulator</title>
+    <style>
+        :root {
+            --primary: #2d7d8e;
+            --accent: #e67e22;
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --border: #bdc3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a4d54 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .metric-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            border-radius: 12px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .progress-fill.critical {
+            background: linear-gradient(90deg, var(--danger), var(--warning));
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, var(--warning), var(--accent));
+        }
+
+        .stakeholder-list {
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stakeholder-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            margin: 5px 0;
+        }
+
+        .stakeholder-satisfaction {
+            display: inline-block;
+            width: 80px;
+            height: 15px;
+            background: #e0e0e0;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .stakeholder-satisfaction-fill {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.3s ease;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid var(--border);
+        }
+
+        .day-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .day-info strong {
+            color: var(--accent);
+            font-size: 1.2em;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            background: white;
+            border: 2px solid var(--border);
+            color: var(--dark);
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-btn.primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .action-btn.danger {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .action-btn.danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-overlay.active {
+            display: flex;
+        }
+
+        .dialog {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .dialog h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 10px;
+        }
+
+        .dialog-text {
+            margin-bottom: 20px;
+            line-height: 1.8;
+            color: var(--dark);
+        }
+
+        .dialog-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 12px 15px;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            font-size: 0.95em;
+        }
+
+        .option-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .option-btn strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.05em;
+        }
+
+        .option-description {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .game-over h2 {
+            font-size: 2em;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .final-scores {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .final-score-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .final-score-item:last-child {
+            border-bottom: none;
+        }
+
+        .restart-btn {
+            padding: 15px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: #1a4d54;
+            transform: scale(1.05);
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border-left: 4px solid var(--success);
+            padding: 15px 20px;
+            border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+            z-index: 500;
+        }
+
+        .notification.warning {
+            border-left-color: var(--warning);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Gesundheitspolitik Simulator</h1>
+            <p>90 Tage als Bundesgesundheitsminister:in - Rette das System!</p>
+        </div>
+
+        <div id="gameContent">
+            <div class="main-content">
+                <div class="dashboard">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">💰 Budget-Gesundheit</span>
+                            <span class="metric-value" id="budgetValue">30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill critical" id="budgetBar" style="width: 30%">
+                                Problem: 50 Mrd € Loch
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">👥 Stakeholder-Zufriedenheit</span>
+                            <span class="metric-value" id="satisfactionValue">20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill critical" id="satisfactionBar" style="width: 20%"></div>
+                        </div>
+                        <div class="stakeholder-list">
+                            <div class="stakeholder-item">
+                                <span>AOK (Krankenkasse):</span>
+                                <div class="stakeholder-satisfaction">
+                                    <div class="stakeholder-satisfaction-fill" style="width: 40%"></div>
+                                </div>
+                                <span>40%</span>
+                            </div>
+                            <div class="stakeholder-item">
+                                <span>KV (Ärzte):</span>
+                                <div class="stakeholder-satisfaction">
+                                    <div class="stakeholder-satisfaction-fill" style="width: 15%"></div>
+                                </div>
+                                <span>15%</span>
+                            </div>
+                            <div class="stakeholder-item">
+                                <span>Grüne (Koalition):</span>
+                                <div class="stakeholder-satisfaction">
+                                    <div class="stakeholder-satisfaction-fill" style="width: 25%"></div>
+                                </div>
+                                <span>25%</span>
+                            </div>
+                            <div class="stakeholder-item">
+                                <span>Patienten-Org:</span>
+                                <div class="stakeholder-satisfaction">
+                                    <div class="stakeholder-satisfaction-fill" style="width: 10%"></div>
+                                </div>
+                                <span>10%</span>
+                            </div>
+                            <div class="stakeholder-item">
+                                <span>Arbeitgeber:</span>
+                                <div class="stakeholder-satisfaction">
+                                    <div class="stakeholder-satisfaction-fill" style="width: 15%"></div>
+                                </div>
+                                <span>15%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">⚕️ Versorgungsqualität</span>
+                            <span class="metric-value" id="qualityValue">50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill warning" id="qualityBar" style="width: 50%"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">⚖️ Gerechtigkeit</span>
+                            <span class="metric-value" id="justiceValue">30%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill critical" id="justiceBar" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dialog" id="mainDialog" style="box-shadow: none; background: white; border: 2px solid var(--border); max-height: 600px; overflow-y: auto;">
+                    <h2 id="dialogTitle">Willkommen, Minister:in!</h2>
+                    <div id="dialogContent" class="dialog-text">
+                        <p>Du bist gerade zum/r Bundesgesundheitsminister:in ernannt worden.</p>
+                        <p><strong>Die Situation ist kritisch:</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Die Lauterbach-Reform 2024 war ein Desaster</li>
+                            <li>Finanzierungslücke: <strong>50 MILLIARDEN EURO</strong></li>
+                            <li>Dein Koalitionspartner (Grüne) erwartet progressive Maßnahmen</li>
+                            <li>Ärzte drohen mit Streik (Honorare seit 2022 nicht erhöht)</li>
+                            <li>Landärzte verschwinden (Brandenburg: -20% in 5 Jahren)</li>
+                        </ul>
+                        <p style="margin-top: 15px;"><strong>Verfügbares Budget:</strong> 80 Mrd Euro (von 450 Mrd Gesamtbudget)</p>
+                        <p><strong>Du hast 90 Tage bis zur Haushalts-Debatte im Bundestag.</strong></p>
+                    </div>
+                    <div class="dialog-options" id="dialogOptions"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="day-info">
+                    <strong id="dayDisplay">Tag 1 von 90</strong>
+                    <br>
+                    <span id="phaseDisplay">Honeymoon Phase - Stakeholder geben dir Zeit</span>
+                </div>
+
+                <div class="action-grid" id="actionGrid">
+                    <button class="action-btn primary" onclick="gameState.showDecisionMenu()">
+                        📞 Verhandlungen starten
+                    </button>
+                    <button class="action-btn primary" onclick="gameState.showPolicyMenu()">
+                        📋 Policy entwerfen
+                    </button>
+                    <button class="action-btn" onclick="gameState.skipDays()">
+                        ⏭️ Tage überspringen
+                    </button>
+                    <button class="action-btn" onclick="gameState.showBudgetInfo()">
+                        💰 Budget-Details
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State Management
+        const gameState = {
+            day: 1,
+            budget: 30,
+            satisfaction: 20,
+            quality: 50,
+            justice: 30,
+            stakeholders: {
+                aok: 40,
+                doctors: 15,
+                greens: 25,
+                patients: 10,
+                employers: 15
+            },
+            gameOver: false,
+            decisions: [],
+
+            init() {
+                this.showStartDialog();
+            },
+
+            updateMetrics() {
+                document.getElementById('budgetValue').textContent = Math.round(this.budget) + '%';
+                document.getElementById('satisfactionValue').textContent = Math.round(this.satisfaction) + '%';
+                document.getElementById('qualityValue').textContent = Math.round(this.quality) + '%';
+                document.getElementById('justiceValue').textContent = Math.round(this.justice) + '%';
+
+                document.getElementById('budgetBar').style.width = Math.min(100, this.budget) + '%';
+                document.getElementById('satisfactionBar').style.width = Math.min(100, this.satisfaction) + '%';
+                document.getElementById('qualityBar').style.width = Math.min(100, this.quality) + '%';
+                document.getElementById('justiceBar').style.width = Math.min(100, this.justice) + '%';
+
+                this.updateStakeholders();
+                this.updateDayInfo();
+            },
+
+            updateStakeholders() {
+                const items = document.querySelectorAll('.stakeholder-item');
+                const stakeholderValues = [
+                    this.stakeholders.aok,
+                    this.stakeholders.doctors,
+                    this.stakeholders.greens,
+                    this.stakeholders.patients,
+                    this.stakeholders.employers
+                ];
+
+                items.forEach((item, index) => {
+                    const fill = item.querySelector('.stakeholder-satisfaction-fill');
+                    const valueSpan = item.querySelector('span:last-child');
+                    fill.style.width = Math.max(0, Math.min(100, stakeholderValues[index])) + '%';
+                    valueSpan.textContent = Math.round(stakeholderValues[index]) + '%';
+                });
+
+                this.satisfaction = (
+                    this.stakeholders.aok +
+                    this.stakeholders.doctors +
+                    this.stakeholders.greens +
+                    this.stakeholders.patients +
+                    this.stakeholders.employers
+                ) / 5;
+            },
+
+            updateDayInfo() {
+                document.getElementById('dayDisplay').textContent = `Tag ${this.day} von 90`;
+                
+                let phase = 'Verhandlungs-Phase - Druck steigt';
+                if (this.day <= 15) phase = 'Honeymoon Phase - Stakeholder geben dir Zeit';
+                else if (this.day <= 45) phase = 'Verhandlungs-Phase - Druck steigt';
+                else if (this.day <= 75) phase = 'Entscheidungs-Phase - Du musst dich festlegen';
+                else if (this.day <= 90) phase = 'Umsetzungs-Phase - Konsequenzen werden sichtbar';
+                else phase = 'Haushalts-Debatte im Bundestag - Finale!';
+                
+                document.getElementById('phaseDisplay').textContent = phase;
+
+                if (this.day >= 91) {
+                    this.endGame();
+                }
+            },
+
+            showStartDialog() {
+                const dialog = document.getElementById('mainDialog');
+                const options = document.getElementById('dialogOptions');
+                
+                options.innerHTML = `
+                    <button class="option-btn" onclick="gameState.startGame()">
+                        <strong>🚀 Spiel starten</strong>
+                        <span class="option-description">Beginne deine Karriere als Minister:in</span>
+                    </button>
+                `;
+            },
+
+            startGame() {
+                this.showDecisionMenu();
+            },
+
+            showDecisionMenu() {
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = '📞 Verhandlungen starten';
+                content.innerHTML = `
+                    <p>Wähle einen Stakeholder zum Verhandeln. Jede Verhandlung beeinflusst die Zufriedenheit und kann Budget-Lösungen bringen.</p>
+                    <div class="warning-box">
+                        <strong>⚠️ Beachte:</strong> Du kannst nicht alle glücklich machen. Jede Entscheidung hat Trade-offs!
+                    </div>
+                `;
+
+                options.innerHTML = `
+                    <button class="option-btn" onclick="gameState.negotiateStakeholder('aok')">
+                        <strong>🏦 AOK-Krankenkasse</strong>
+                        <span class="option-description">Zufriedenheit: ${Math.round(this.stakeholders.aok)}% | Ziel: Budget-Balance</span>
+                    </button>
+                    <button class="option-btn" onclick="gameState.negotiateStakeholder('doctors')">
+                        <strong>👨‍⚕️ Kassenärztliche Vereinigung</strong>
+                        <span class="option-description">Zufriedenheit: ${Math.round(this.stakeholders.doctors)}% | Ziel: +20% Honorare</span>
+                    </button>
+                    <button class="option-btn" onclick="gameState.negotiateStakeholder('greens')">
+                        <strong>🟢 Grüne (Koalitionspartner)</strong>
+                        <span class="option-description">Zufriedenheit: ${Math.round(this.stakeholders.greens)}% | Ziel: Prävention TOP 3</span>
+                    </button>
+                    <button class="option-btn" onclick="gameState.negotiateStakeholder('patients')">
+                        <strong>👴 Patienten-Organisationen</strong>
+                        <span class="option-description">Zufriedenheit: ${Math.round(this.stakeholders.patients)}% | Ziel: Zugang & Gerechtigkeit</span>
+                    </button>
+                    <button class="option-btn" onclick="gameState.negotiateStakeholder('employers')">
+                        <strong>💼 Arbeitgeberverband</strong>
+                        <span class="option-description">Zufriedenheit: ${Math.round(this.stakeholders.employers)}% | Ziel: Stabile Lohnnebenkosten</span>
+                    </button>
+                    <button class="option-btn" onclick="gameState.showActionMenu()" style="border-color: var(--accent); color: var(--accent);">
+                        <strong>← Zurück zum Menü</strong>
+                    </button>
+                `;
+            },
+
+            negotiateStakeholder(stakeholder) {
+                const stakeholderData = {
+                    aok: {
+                        name: 'AOK-Krankenkasse',
+                        emoji: '🏦',
+                        message: 'Minister:in, ohne massive Erhöhung der Steuerfinanzierung muss ich den Beitragssatz erhöhen. Das können die Arbeitgeber nicht tragen. Was ist DEIN Plan?',
+                        options: [
+                            { text: 'Progressive Steuer +0.75% auf Einkommen > €100k', budgetDelta: 12, satisfaction: 25, quality: -2, justice: 12 },
+                            { text: 'Beitragssätze +0.5% (Arbeitgeber + Arbeitnehmer)', budgetDelta: 8, satisfaction: -10, quality: -5, justice: -5 },
+                            { text: 'Digitalisierungs-Investition (3 Mrd)', budgetDelta: 2, satisfaction: 15, quality: 10, justice: 5 }
+                        ]
+                    },
+                    doctors: {
+                        name: 'Kassenärztliche Vereinigung',
+                        emoji: '👨‍⚕️',
+                        message: 'Ärzte sind unterfinanziert. Inflation +18%, Honorare +0%. Das geht nicht. Wir brauchen mindestens +3% sofort!',
+                        options: [
+                            { text: 'Ärzte-Honorare +10% (kostet 6 Mrd extra)', budgetDelta: -6, satisfaction: 30, quality: 15, justice: -5 },
+                            { text: 'Landarzt-Offensive: +50% für ländliche Ärzte (3 Mrd)', budgetDelta: -3, satisfaction: 20, quality: 20, justice: 15 },
+                            { text: 'Digitalisierung als Effizienz-Hilfe (statt Geld)', budgetDelta: 0, satisfaction: -15, quality: 5, justice: 0 }
+                        ]
+                    },
+                    greens: {
+                        name: 'Grüne (Koalitionspartner)',
+                        emoji: '🟢',
+                        message: 'Die Koalitionsvereinbarung verlangt: Prävention MUSS TOP 3 Ziel sein. Wo ist die Investition?',
+                        options: [
+                            { text: 'Prävention mit 5 Mrd (Gym-Gutscheine, Mental Health)', budgetDelta: -5, satisfaction: 30, quality: 10, justice: 15 },
+                            { text: 'Kompromiss: 2 Mrd Prävention + 2 Mrd Digitalisierung', budgetDelta: -4, satisfaction: 20, quality: 8, justice: 10 },
+                            { text: 'Prävention später, fokus auf Krise jetzt', budgetDelta: 0, satisfaction: -40, quality: -10, justice: 0 }
+                        ]
+                    },
+                    patients: {
+                        name: 'Patienten-Organisationen',
+                        emoji: '👴',
+                        message: 'Wenn ihr CRISPR-Therapie nicht erstattet, habt ihr ein PR-Problem. Das ist lebenswichtig!',
+                        options: [
+                            { text: 'CRISPR erstatten (500 Mio/Jahr)', budgetDelta: -5, satisfaction: 35, quality: 20, justice: 25 },
+                            { text: 'Selektive Erstattung (250 Mio/Jahr)', budgetDelta: -2.5, satisfaction: 20, quality: 10, justice: 15 },
+                            { text: 'Nicht finanzierbar - nur Standard-Therapien', budgetDelta: 0, satisfaction: -30, quality: -15, justice: -20 }
+                        ]
+                    },
+                    employers: {
+                        name: 'Arbeitgeberverband',
+                        emoji: '💼',
+                        message: 'Wenn ihr +1% Beitragssätze nehmt, wandern Jobs ab. Steuern auf Reiche statt auf Arbeit!',
+                        options: [
+                            { text: 'Progressive Steuer statt Beitragssatz-Erhöhung', budgetDelta: 10, satisfaction: 25, quality: 5, justice: 15 },
+                            { text: 'Gemischter Ansatz: +0.5% Beitrag + +0.5% progressive Steuer', budgetDelta: 8, satisfaction: 15, quality: 3, justice: 8 },
+                            { text: 'Nur Beitragssatz-Erhöhung (Arbeitsmarkt-Risiko)', budgetDelta: 8, satisfaction: -25, quality: -10, justice: -10 }
+                        ]
+                    }
+                };
+
+                const data = stakeholderData[stakeholder];
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = `${data.emoji} ${data.name}`;
+                content.innerHTML = `<p style="font-style: italic; color: var(--primary);">"${data.message}"</p>`;
+
+                options.innerHTML = data.options.map((option, index) => `
+                    <button class="option-btn" onclick="gameState.executeNegotiation('${stakeholder}', ${index})">
+                        <strong>${option.text}</strong>
+                        <span class="option-description">
+                            Budget: ${option.budgetDelta > 0 ? '+' : ''}${option.budgetDelta} Mrd | 
+                            Zufriedenheit: ${option.satisfaction > 0 ? '+' : ''}${option.satisfaction}%
+                        </span>
+                    </button>
+                `).join('') + `
+                    <button class="option-btn" onclick="gameState.showDecisionMenu()" style="border-color: var(--accent); color: var(--accent);">
+                        <strong>← Zurück</strong>
+                    </button>
+                `;
+            },
+
+            executeNegotiation(stakeholder, optionIndex) {
+                const stakeholderData = {
+                    aok: {
+                        name: 'AOK',
+                        options: [
+                            { text: 'Progressive Steuer +0.75%', budgetDelta: 12, satisfaction: 25, quality: -2, justice: 12 },
+                            { text: 'Beitragssätze +0.5%', budgetDelta: 8, satisfaction: -10, quality: -5, justice: -5 },
+                            { text: 'Digitalisierungs-Investition', budgetDelta: 2, satisfaction: 15, quality: 10, justice: 5 }
+                        ]
+                    },
+                    doctors: {
+                        name: 'Ärzte',
+                        options: [
+                            { text: 'Ärzte-Honorare +10%', budgetDelta: -6, satisfaction: 30, quality: 15, justice: -5 },
+                            { text: 'Landarzt-Offensive +50%', budgetDelta: -3, satisfaction: 20, quality: 20, justice: 15 },
+                            { text: 'Digitalisierung statt Geld', budgetDelta: 0, satisfaction: -15, quality: 5, justice: 0 }
+                        ]
+                    },
+                    greens: {
+                        name: 'Grüne',
+                        options: [
+                            { text: 'Prävention 5 Mrd', budgetDelta: -5, satisfaction: 30, quality: 10, justice: 15 },
+                            { text: 'Kompromiss 2+2 Mrd', budgetDelta: -4, satisfaction: 20, quality: 8, justice: 10 },
+                            { text: 'Später', budgetDelta: 0, satisfaction: -40, quality: -10, justice: 0 }
+                        ]
+                    },
+                    patients: {
+                        name: 'Patienten',
+                        options: [
+                            { text: 'CRISPR erstatten', budgetDelta: -5, satisfaction: 35, quality: 20, justice: 25 },
+                            { text: 'Selektive Erstattung', budgetDelta: -2.5, satisfaction: 20, quality: 10, justice: 15 },
+                            { text: 'Nicht finanzierbar', budgetDelta: 0, satisfaction: -30, quality: -15, justice: -20 }
+                        ]
+                    },
+                    employers: {
+                        name: 'Arbeitgeber',
+                        options: [
+                            { text: 'Progressive Steuer', budgetDelta: 10, satisfaction: 25, quality: 5, justice: 15 },
+                            { text: 'Gemischter Ansatz', budgetDelta: 8, satisfaction: 15, quality: 3, justice: 8 },
+                            { text: 'Nur Beitragssatz', budgetDelta: 8, satisfaction: -25, quality: -10, justice: -10 }
+                        ]
+                    }
+                };
+
+                const data = stakeholderData[stakeholder];
+                const option = data.options[optionIndex];
+
+                this.decisions.push({ stakeholder, option });
+
+                this.budget += option.budgetDelta;
+                this.quality += option.quality;
+                this.justice += option.justice;
+
+                if (stakeholder === 'aok') this.stakeholders.aok += option.satisfaction;
+                else if (stakeholder === 'doctors') this.stakeholders.doctors += option.satisfaction;
+                else if (stakeholder === 'greens') this.stakeholders.greens += option.satisfaction;
+                else if (stakeholder === 'patients') this.stakeholders.patients += option.satisfaction;
+                else if (stakeholder === 'employers') this.stakeholders.employers += option.satisfaction;
+
+                this.day += 4;
+                this.updateMetrics();
+
+                this.showNegotiationResult(stakeholder, data.name, option);
+            },
+
+            showNegotiationResult(stakeholder, name, option) {
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = '✅ Verhandlung abgeschlossen';
+                content.innerHTML = `
+                    <p><strong>${name}:</strong> "${option.text}"</p>
+                    <div class="info-box">
+                        <p><strong>Konsequenzen nach 4 Tagen:</strong></p>
+                        <ul style="margin-left: 20px; margin-top: 10px;">
+                            <li>Budget: ${option.budgetDelta > 0 ? '+' : ''}${option.budgetDelta} Mrd Euro</li>
+                            <li>Qualität: ${option.quality > 0 ? '+' : ''}${option.quality}%</li>
+                            <li>Gerechtigkeit: ${option.justice > 0 ? '+' : ''}${option.justice}%</li>
+                        </ul>
+                    </div>
+                    <p style="margin-top: 15px;">Die Stakeholder reagieren mit gemischten Gefühlen. Einige sind zufriedener, andere weniger...</p>
+                `;
+
+                options.innerHTML = `
+                    <button class="option-btn primary" onclick="gameState.showActionMenu()">
+                        <strong>⏭️ Weiter zum Menü</strong>
+                        <span class="option-description">Tag ${this.day} von 90</span>
+                    </button>
+                `;
+            },
+
+            showPolicyMenu() {
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = '📋 Policy-Instrumente';
+                content.innerHTML = `
+                    <p>Entwerfe deine Reform. Kombiniere mehrere Maßnahmen um die 50 Mrd Euro Lücke zu schließen.</p>
+                    <div class="warning-box">
+                        <strong>💡 Tipp:</strong> Du brauchst mindestens +50 Mrd Budget, um die Lücke zu schließen.
+                    </div>
+                `;
+
+                options.innerHTML = `
+                    <button class="option-btn" onclick="gameState.showActionMenu()" style="border-color: var(--accent); color: var(--accent);">
+                        <strong>← Zurück zum Menü</strong>
+                        <span class="option-description">Vollständige Reform-Funktion kommt bald!</span>
+                    </button>
+                `;
+            },
+
+            showBudgetInfo() {
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = '💰 Budget-Übersicht';
+                content.innerHTML = `
+                    <p><strong>Gesamtbudget Deutschland:</strong> 450 Mrd Euro</p>
+                    <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 8px;"><strong>Laufende Verpflichtungen:</strong></td>
+                            <td style="text-align: right; padding: 8px;">-370 Mrd (UNVERÄNDERBAR)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 8px;">├─ Krankenhäuser</td>
+                            <td style="text-align: right; padding: 8px;">-120 Mrd</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 8px;">├─ Krankenkassen-Transfers</td>
+                            <td style="text-align: right; padding: 8px;">-220 Mrd</td>
+                        </tr>
+                        <tr style="background: var(--light);">
+                            <td style="padding: 8px;"><strong>Verfügbar für dich:</strong></td>
+                            <td style="text-align: right; padding: 8px;"><strong>80 Mrd</strong></td>
+                        </tr>
+                    </table>
+                    <p style="margin-top: 15px; color: var(--danger);"><strong>⚠️ Problem:</strong> Finanzierungsloch = 50 Mrd Euro</p>
+                    <p><strong>Deine aktuelle Budget-Bilanz:</strong> ${this.budget}%</p>
+                `;
+
+                options.innerHTML = `
+                    <button class="option-btn primary" onclick="gameState.showActionMenu()">
+                        <strong>← Zurück zum Menü</strong>
+                    </button>
+                `;
+            },
+
+            skipDays() {
+                this.day += 10;
+                this.updateMetrics();
+                this.showActionMenu();
+            },
+
+            showActionMenu() {
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = '🎮 Was möchtest du tun?';
+                content.innerHTML = `
+                    <p>Tag ${this.day} von 90 - Wähle deine nächste Aktion.</p>
+                    <div class="info-box">
+                        <p><strong>Status:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Budget-Gesundheit: ${Math.round(this.budget)}%</li>
+                            <li>Stakeholder-Zufriedenheit: ${Math.round(this.satisfaction)}%</li>
+                        </ul>
+                    </div>
+                `;
+
+                options.innerHTML = `
+                    <button class="option-btn primary" onclick="gameState.showDecisionMenu()">
+                        <strong>📞 Mit Stakeholder verhandeln</strong>
+                    </button>
+                    <button class="option-btn primary" onclick="gameState.showPolicyMenu()">
+                        <strong>📋 Reform-Paket entwerfen</strong>
+                    </button>
+                    <button class="option-btn" onclick="gameState.skipDays()">
+                        <strong>⏭️ 10 Tage überspringen</strong>
+                    </button>
+                `;
+            },
+
+            endGame() {
+                const dialog = document.getElementById('mainDialog');
+                const title = document.getElementById('dialogTitle');
+                const content = document.getElementById('dialogContent');
+                const options = document.getElementById('dialogOptions');
+
+                title.textContent = '🏁 Spiel zu Ende!';
+
+                let result = '';
+                if (this.budget >= 50 && this.satisfaction >= 60 && this.quality >= 70 && this.justice >= 60) {
+                    result = '🏆 EXCELLENT! Du hast die Reform erfolgreich umgesetzt!';
+                } else if (this.budget >= 40 && this.satisfaction >= 50) {
+                    result = '✅ VERY GOOD! Eine solide Reform, aber Verbesserungen möglich.';
+                } else if (this.budget >= 30 && this.satisfaction >= 40) {
+                    result = '👍 GOOD! Du hast erste Fortschritte gemacht.';
+                } else {
+                    result = '⚠️ Das war knapp. Die Reform braucht mehr Arbeit.';
+                }
+
+                content.innerHTML = `
+                    <p style="font-size: 1.2em; text-align: center; margin-bottom: 20px;">${result}</p>
+                    <div class="final-scores">
+                        <div class="final-score-item">
+                            <span>💰 Budget-Gesundheit</span>
+                            <span><strong>${Math.round(this.budget)}%</strong> (Ziel: ≥50%)</span>
+                        </div>
+                        <div class="final-score-item">
+                            <span>👥 Stakeholder-Zufriedenheit</span>
+                            <span><strong>${Math.round(this.satisfaction)}%</strong> (Ziel: ≥60%)</span>
+                        </div>
+                        <div class="final-score-item">
+                            <span>⚕️ Versorgungsqualität</span>
+                            <span><strong>${Math.round(this.quality)}%</strong> (Ziel: ≥70%)</span>
+                        </div>
+                        <div class="final-score-item">
+                            <span>⚖️ Gerechtigkeit</span>
+                            <span><strong>${Math.round(this.justice)}%</strong> (Ziel: ≥60%)</span>
+                        </div>
+                    </div>
+                    <p style="margin-top: 20px; text-align: center;"><strong>Entscheidungen getroffen:</strong> ${this.decisions.length}</p>
+                `;
+
+                options.innerHTML = `
+                    <button class="option-btn primary" onclick="location.reload()" style="width: 100%;">
+                        <strong>🔄 Nochmal spielen</strong>
+                    </button>
+                `;
+            }
+        };
+
+        // Initialize game
+        window.addEventListener('DOMContentLoaded', () => {
+            gameState.init();
+            gameState.updateMetrics();
+        });
+    </script>
+</body>
+</html>
