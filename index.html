@@ -533,7 +533,7 @@
                 <div class="day-info">
                     <strong id="dayDisplay">Tag 1 von 90</strong>
                     <br>
-                    <span id="phaseDisplay">Honeymoon Phase - Stakeholder geben dir Zeit</span>
+                    <span id="phaseDisplay">Stakeholder geben dir Zeit</span>
                 </div>
 
                 <div class="action-grid" id="actionGrid">
@@ -621,7 +621,7 @@
                 document.getElementById('dayDisplay').textContent = `Tag ${this.day} von 90`;
                 
                 let phase = 'Verhandlungs-Phase - Druck steigt';
-                if (this.day <= 15) phase = 'Honeymoon Phase - Stakeholder geben dir Zeit';
+                if (this.day <= 15) phase = 'Stakeholder geben dir Zeit';
                 else if (this.day <= 45) phase = 'Verhandlungs-Phase - Druck steigt';
                 else if (this.day <= 75) phase = 'Entscheidungs-Phase - Du musst dich festlegen';
                 else if (this.day <= 90) phase = 'Umsetzungs-Phase - Konsequenzen werden sichtbar';
